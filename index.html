@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kenchanのポートフォリオ</title>
+    <!-- Font Awesomeのアイコンフォントを利用するためのリンク -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ここからCSS（デザイン）の記述 */
+
+        /* ページ全体の基本的な設定 */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        /* ヘッダー（ページ上部）のスタイル */
+        header {
+            /* 背景に宇宙の画像を指定 */
+            background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; /* 画像がヘッダー全体を覆うように設定 */
+            background-position: center; /* 画像を中央に配置 */
+            color: #fff;
+            padding: 4rem 0; /* 上下の余白を増やして高さを出す */
+            text-align: center;
+            position: relative; /* 子要素を相対的に配置するための基準点とする */
+            z-index: 1; /* テキストがオーバーレイの上に表示されるように */
+        }
+
+        /* 画像の上に重ねる半透明の黒い膜（オーバーレイ）のスタイル */
+        header::before {
+            content: ''; /* 疑似要素にはcontentプロパティが必須 */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒 */
+            z-index: -1; /* テキスト（h1）の背面に配置 */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            position: relative; /* z-indexを有効にするために必要 */
+            z-index: 2;
+        }
+
+        /* メインコンテンツ部分の余白設定 */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* セクションの基本的なスタイル */
+        section {
+            margin-bottom: 2rem;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        section h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            color: #333;
+            border-bottom: 2px solid #f4f4f4;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 自己紹介セクションのアイコンのスタイル */
+        #about .fa-user {
+            margin-right: 10px;
+        }
+        
+        /* 作品集のカードのスタイル */
+        .works-grid {
+            display: grid;
+            /* 画面の幅に応じて列の数を変更する */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        /* カードにマウスを乗せたときの動き */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-content h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .card-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .card-content .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        /* ボタンにマウスを乗せたときの色の変化 */
+        .card-content .btn:hover {
+            background-color: #555;
+        }
+
+        /* フッター（ページ下部）のスタイル */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* ここまでCSSの記述 */
+    </style>
+</head>
+<body>
+
+    <!-- ページのヘッダー部分 -->
+    <header>
+        <h1>kenchanのポートフォリオ</h1>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <div class="container">
+
+        <!-- 自己紹介セクション -->
+        <section id="about">
+            <h2><i class="fas fa-user"></i> 自己紹介  <i class="fas fa-user"></i></h2>
+            <p>
+                こんにちは、kenchanです。新しいテクノロジーやデザインが好きで、面白い作品を作ることに情熱を注いでいます。このページでは、私がこれまでに作成した作品の一部を紹介します。
+            </p>
+        </section>
+
+        <!-- 作品集セクション -->
+        <section id="works">
+            <h2><i class="fas fa-palette"></i>　作品集　<i class="fas fa-palette"></i></h2>
+            <div class="works-grid">
+
+                <!-- 作品1 -->
+                <div class="card">
+                    <img src="https://placehold.jp/400x300.png?text=作品1" alt="作品1の画像">
+                    <div class="card-content">
+                        <h3>作品タイトル1</h3>
+                        <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
+                        <a href="#" class="btn">詳しく見る</a>
+                    </div>
+                </div>
+
+                <!-- 作品2 -->
+                <div class="card">
+                    <img src="https://placehold.jp/400x300.png?text=作品2" alt="作品2の画像">
+                    <div class="card-content">
+                        <h3>作品タイトル2</h3>
+                        <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
+                        <a href="#" class="btn">詳しく見る</a>
+                    </div>
+                </div>
+
+                <!-- 作品3 -->
+                <div class="card">
+                    <img src="https://placehold.jp/400x300.png?text=作品3" alt="作品3の画像">
+                    <div class="card-content">
+                        <h3>作品タイトル3</h3>
+                        <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
+                        <a href="#" class="btn">詳しく見る</a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 意気込みセクション -->
+        <section id="aspirations">
+            <h2><i class="fas fa-rocket"></i>　意気込み　<i class="fas fa-rocket"></i></h2>
+            <p>
+                これからも新しい技術を学び続け、人々を驚かせるような、楽しくて使いやすいサービスやゲームを作っていきたいです。世界中の人が笑顔になるような作品を目指して、日々挑戦を続けます！
+            </p>
+        </section>
+
+    </div>
+
+    <!-- ページのフッター部分 -->
+    <footer>
+        <p>&copy; 2025 kenchan. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // ここからJavaScriptの記述
+
+        // この関数は、ページのすべての要素が読み込まれた後に実行されます。
+        function onDOMLoaded() {
+            // コンソールにメッセージを表示して、JavaScriptが正しく動いているか確認します。
+            console.log('ページの読み込みが完了しました。');
+
+            // すべてのカードを選択します。
+            const cards = document.querySelectorAll('.card');
+
+            // カードがクリックされたときに、簡単なアニメーションを追加する関数を呼び出します。
+            function addCardAnimation(card) {
+                card.addEventListener('mouseenter', function() {
+                    // マウスがカードの上に乗ったときの処理
+                    // 何か特別な動きを追加したい場合はここに書きます。
+                });
+                card.addEventListener('mouseleave', function() {
+                    // マウスがカードから離れたときの処理
+                    // 何か特別な動きを追加したい場合はここに書きます。
+                });
+            }
+            
+            // すべてのカードにアニメーションを追加します。
+            for (let i = 0; i < cards.length; i++) {
+                addCardAnimation(cards[i]);
+            }
+        }
+
+        // HTMLの読み込みが終わったら、'onDOMLoaded'関数を実行するように設定します。
+        document.addEventListener('DOMContentLoaded', onDOMLoaded);
+
+        // ここまでJavaScriptの記述
+    </script>
+
+</body>
+</html>
