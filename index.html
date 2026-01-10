@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,31 +23,40 @@
         header {
             /* 背景に宇宙の画像を指定 */
             background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover; /* 画像がヘッダー全体を覆うように設定 */
-            background-position: center; /* 画像を中央に配置 */
+            background-size: cover;
+            /* 画像がヘッダー全体を覆うように設定 */
+            background-position: center;
+            /* 画像を中央に配置 */
             color: #fff;
-            padding: 4rem 0; /* 上下の余白を増やして高さを出す */
+            padding: 4rem 0;
+            /* 上下の余白を増やして高さを出す */
             text-align: center;
-            position: relative; /* 子要素を相対的に配置するための基準点とする */
-            z-index: 1; /* テキストがオーバーレイの上に表示されるように */
+            position: relative;
+            /* 子要素を相対的に配置するための基準点とする */
+            z-index: 1;
+            /* テキストがオーバーレイの上に表示されるように */
         }
 
         /* 画像の上に重ねる半透明の黒い膜（オーバーレイ）のスタイル */
         header::before {
-            content: ''; /* 疑似要素にはcontentプロパティが必須 */
+            content: '';
+            /* 疑似要素にはcontentプロパティが必須 */
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒 */
-            z-index: -1; /* テキスト（h1）の背面に配置 */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* 半透明の黒 */
+            z-index: -1;
+            /* テキスト（h1）の背面に配置 */
         }
 
         header h1 {
             margin: 0;
             font-size: 2.5rem;
-            position: relative; /* z-indexを有効にするために必要 */
+            position: relative;
+            /* z-indexを有効にするために必要 */
             z-index: 2;
         }
 
@@ -64,7 +74,7 @@
             background-color: #fff;
             padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         section h2 {
@@ -80,7 +90,7 @@
         #about .fa-user {
             margin-right: 10px;
         }
-        
+
         /* 作品集のカードのスタイル */
         .works-grid {
             display: grid;
@@ -94,14 +104,14 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
         /* カードにマウスを乗せたときの動き */
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .card img {
@@ -151,6 +161,7 @@
         /* ここまでCSSの記述 */
     </style>
 </head>
+
 <body>
 
     <!-- ページのヘッダー部分 -->
@@ -163,7 +174,7 @@
 
         <!-- 自己紹介セクション -->
         <section id="about">
-            <h2><i class="fas fa-user"></i> 自己紹介  <i class="fas fa-user"></i></h2>
+            <h2><i class="fas fa-user"></i> 自己紹介 <i class="fas fa-user"></i></h2>
             <p>
                 こんにちは、kenchanです。新しいテクノロジーやデザインが好きで、面白い作品を作ることに情熱を注いでいます。このページでは、私がこれまでに作成した作品の一部を紹介します。
             </p>
@@ -173,6 +184,36 @@
         <section id="works">
             <h2><i class="fas fa-palette"></i>　作品集　<i class="fas fa-palette"></i></h2>
             <div class="works-grid">
+
+                <!-- 作品4 (スペースジャンパー) -->
+                <div class="card">
+                    <img src="images/space_jumper.png" alt="スペースジャンパーの画像">
+                    <div class="card-content">
+                        <h3>スペースジャンパー</h3>
+                        <p>HTML5 Canvasで作った2Dアクションゲームです。障害物をジャンプして避けてスコアを稼ごう！</p>
+                        <a href="game.html" class="btn">遊んでみる</a>
+                    </div>
+                </div>
+
+                <!-- 作品5 (スペースディフェンダー3D) -->
+                <div class="card">
+                    <img src="images/space_defender.png" alt="スペースディフェンダー3Dの画像">
+                    <div class="card-content">
+                        <h3>スペースディフェンダー3D</h3>
+                        <p>Three.jsを使用した3Dシューティングゲーム。迫りくる敵を撃ち落として宇宙を守れ！</p>
+                        <a href="shooting.html" class="btn">出撃する</a>
+                    </div>
+                </div>
+
+                <!-- 作品3 -->
+                <div class="card">
+                    <img src="https://placehold.jp/400x300.png?text=作品3" alt="作品3の画像">
+                    <div class="card-content">
+                        <h3>作品タイトル3</h3>
+                        <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
+                        <a href="#" class="btn">詳しく見る</a>
+                    </div>
+                </div>
 
                 <!-- 作品1 -->
                 <div class="card">
@@ -189,16 +230,6 @@
                     <img src="https://placehold.jp/400x300.png?text=作品2" alt="作品2の画像">
                     <div class="card-content">
                         <h3>作品タイトル2</h3>
-                        <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
-                        <a href="#" class="btn">詳しく見る</a>
-                    </div>
-                </div>
-
-                <!-- 作品3 -->
-                <div class="card">
-                    <img src="https://placehold.jp/400x300.png?text=作品3" alt="作品3の画像">
-                    <div class="card-content">
-                        <h3>作品タイトル3</h3>
                         <p>この作品は〇〇のコンセプトで作成しました。××の技術を使って、△△を表現しています。</p>
                         <a href="#" class="btn">詳しく見る</a>
                     </div>
@@ -235,16 +266,16 @@
 
             // カードがクリックされたときに、簡単なアニメーションを追加する関数を呼び出します。
             function addCardAnimation(card) {
-                card.addEventListener('mouseenter', function() {
+                card.addEventListener('mouseenter', function () {
                     // マウスがカードの上に乗ったときの処理
                     // 何か特別な動きを追加したい場合はここに書きます。
                 });
-                card.addEventListener('mouseleave', function() {
+                card.addEventListener('mouseleave', function () {
                     // マウスがカードから離れたときの処理
                     // 何か特別な動きを追加したい場合はここに書きます。
                 });
             }
-            
+
             // すべてのカードにアニメーションを追加します。
             for (let i = 0; i < cards.length; i++) {
                 addCardAnimation(cards[i]);
@@ -258,4 +289,5 @@
     </script>
 
 </body>
+
 </html>
