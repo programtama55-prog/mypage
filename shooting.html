@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スペースディフェンダー3D</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            color: #fff;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            pointer-events: none;
+            /* マウスイベントを通過させる */
+        }
+
+        #score {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 200;
+        }
+
+        #gameOver h1 {
+            font-size: 4rem;
+            color: #ff4444;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: none;
+            pointer-events: auto;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.2rem;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="info">
+        <div id="score">SCORE: 0</div>
+        <div>マウスで移動・自動で発射</div>
+    </div>
+
+    <a href="index.html" class="back-link">← ポートフォリオに戻る</a>
+
+    <div id="gameOver">
+        <h1>GAME OVER</h1>
+        <p style="font-size: 2rem;">Final Score: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="resetGame()">RETRY</button>
+    </div>
+
+    <!-- Three.jsの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // ゲームの設定
+        let scene, camera, renderer;
+        let player, bullets = [], enemies = [], particles = [], enemyBullets = [];
+        let score = 0;
+        let isGameOver = false;
+        let animationId;
+        let lastEnemySpawn = 0;
+        let enemySpawnRate = 1000; // ミリ秒
+        let lastShotTime = 0;
+        const shotInterval = 50; // 発射間隔（ミリ秒）
+
+        // マウス位置の管理
+        const mouse = new THREE.Vector2();
+        const targetPos = new THREE.Vector3();
+
+        // 初期化処理
+        function init() {
+            // シーンの作成
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.002); // 遠くを暗くするフォグ
+
+            // カメラの作成
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 30);
+            camera.lookAt(0, 0, 0);
+
+            // レンダラーの作成
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; // 影を有効にする
+            document.body.appendChild(renderer.domElement);
+
+            // ライトの作成
+            const ambientLight = new THREE.AmbientLight(0x404040); // 環境光
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // プレイヤー（自機）の作成
+            createPlayer();
+
+            // 星空（背景）の作成
+            createStars();
+
+            // イベントリスナーの設定
+            document.addEventListener('mousemove', onMouseMove);
+            // document.addEventListener('mousedown', shoot); // 自動発射にするため削除
+            window.addEventListener('resize', onWindowResize);
+
+            // ゲームループ開始
+            animate();
+        }
+
+        // プレイヤーの作成
+        function createPlayer() {
+            const geometry = new THREE.ConeGeometry(1, 4, 8);
+            const material = new THREE.MeshPhongMaterial({ color: 0x00ccff, emissive: 0x0044aa });
+            player = new THREE.Mesh(geometry, material);
+            player.rotation.x = -Math.PI / 2; // 前に向ける
+            player.castShadow = true;
+            scene.add(player);
+        }
+
+        // 星空の作成
+        function createStars() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 1000; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * 200,
+                    (Math.random() - 0.5) * 200,
+                    (Math.random() - 0.5) * 200
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 });
+            const stars = new THREE.Points(geometry, material);
+            scene.add(stars);
+        }
+
+        // 敵の作成
+        function spawnEnemy() {
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshPhongMaterial({ color: 0xff4444 });
+            const enemy = new THREE.Mesh(geometry, material);
+
+            // 画面奥のランダムな位置に出現
+            enemy.position.x = (Math.random() - 0.5) * 40;
+            enemy.position.z = -50;
+            enemy.position.y = 0;
+
+            enemy.castShadow = true;
+            enemy.receiveShadow = true;
+
+            // 回転アニメーション用のプロパティ
+            enemy.rotationSpeed = {
+                x: Math.random() * 0.1,
+                y: Math.random() * 0.1
+            };
+
+            scene.add(enemy);
+            enemies.push(enemy);
+        }
+
+        // 弾の発射
+        function shoot() {
+            if (isGameOver) return;
+
+            const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bullet = new THREE.Mesh(geometry, material);
+
+            bullet.position.copy(player.position);
+            bullet.position.z -= 5; // 機体の少し前から発射
+
+            scene.add(bullet);
+            bullets.push(bullet);
+        }
+
+        // 敵の弾の発射
+        function enemyShoot(enemy) {
+            if (isGameOver) return;
+
+            const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // 赤い弾
+            const bullet = new THREE.Mesh(geometry, material);
+
+            bullet.position.copy(enemy.position);
+            bullet.position.z += 2; // 敵の少し前から発射
+
+            // プレイヤーに向かうベクトルを計算
+            const direction = new THREE.Vector3();
+            direction.subVectors(player.position, enemy.position).normalize();
+            bullet.userData = { velocity: direction.multiplyScalar(0.8) }; // 弾速
+
+            scene.add(bullet);
+            enemyBullets.push(bullet);
+        }
+
+        // パーティクル（爆発エフェクト）の作成
+        function createExplosion(position) {
+            const particleCount = 15;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const velocities = [];
+
+            for (let i = 0; i < particleCount; i++) {
+                positions.push(position.x, position.y, position.z);
+                velocities.push(
+                    (Math.random() - 0.5) * 0.5,
+                    (Math.random() - 0.5) * 0.5,
+                    (Math.random() - 0.5) * 0.5
+                );
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffaa00, size: 0.5, transparent: true });
+            const particleSystem = new THREE.Points(geometry, material);
+
+            particleSystem.userData = { velocities: velocities, life: 1.0 };
+            scene.add(particleSystem);
+            particles.push(particleSystem);
+        }
+
+        // マウス移動時の処理
+        function onMouseMove(event) {
+            // マウス位置を正規化 (-1 to +1)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // マウス位置に対応する3D空間の座標を計算
+            // 簡易的にX軸とZ軸の移動にマッピング
+            targetPos.x = mouse.x * 30; // 移動範囲の制限
+            targetPos.z = mouse.y * 10 + 10; // 前後の移動範囲
+
+            // 画面外に出ないように制限
+            targetPos.x = Math.max(-25, Math.min(25, targetPos.x));
+            targetPos.z = Math.max(-5, Math.min(25, targetPos.z));
+        }
+
+        // ウィンドウリサイズ時の処理
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ゲームオーバー処理
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('finalScore').innerText = score;
+        }
+
+        // ゲームリセット
+        function resetGame() {
+            isGameOver = false;
+            score = 0;
+            document.getElementById('score').innerText = 'SCORE: ' + score;
+            document.getElementById('gameOver').style.display = 'none';
+
+            // 敵と弾を全て削除
+            enemies.forEach(e => scene.remove(e));
+            bullets.forEach(b => scene.remove(b));
+            enemyBullets.forEach(b => scene.remove(b));
+            particles.forEach(p => scene.remove(p));
+            enemies = [];
+            bullets = [];
+            enemyBullets = [];
+            particles = [];
+
+            player.position.set(0, 0, 0);
+        }
+
+        // アニメーションループ
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+
+            if (isGameOver) return;
+
+            // プレイヤーの移動（滑らかに追従）
+            player.position.lerp(targetPos, 0.1);
+            // 移動方向に少し傾ける
+            player.rotation.z = (player.position.x - targetPos.x) * 0.1;
+
+            // 敵の生成
+            const now = Date.now();
+            if (now - lastEnemySpawn > enemySpawnRate) {
+                spawnEnemy();
+                lastEnemySpawn = now;
+                // スコアに応じて難易度アップ（生成間隔短縮）
+                if (enemySpawnRate > 300) enemySpawnRate -= 1;
+            }
+
+            // 自動発射
+            if (now - lastShotTime > shotInterval) {
+                shoot();
+                lastShotTime = now;
+            }
+
+            // 弾の更新
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                if (score < 20000) {
+                    b.position.z -= 1.5; // 弾の速度
+                } else {
+
+                }
+
+                // 画面外に出たら削除
+                if (b.position.z < -100) {
+                    scene.remove(b);
+                    bullets.splice(i, 1);
+                }
+            }
+
+            // 敵の弾の更新
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                const b = enemyBullets[i];
+                b.position.add(b.userData.velocity);
+
+                // プレイヤーとの衝突判定
+                const dist = b.position.distanceTo(player.position);
+                if (dist < 1.5) { // 当たり判定の大きさ
+                    createExplosion(player.position);
+                    gameOver();
+                }
+
+                // 画面外に出たら削除 (手前または奥)
+                if (b.position.z > 50 || b.position.z < -100) {
+                    scene.remove(b);
+                    enemyBullets.splice(i, 1);
+                }
+            }
+
+            // 敵の更新
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                e.position.z += 0.1; // 敵の速度
+                if (score < 50000) {
+                    e.position.x += Math.sin(Date.now() / 200) * score / 25000 // ジグザグ移動
+                } else {
+                    e.position.x += Math.sin(Date.now() / 200) * 2
+                }
+                e.rotation.x += e.rotationSpeed.x;
+                e.rotation.y += e.rotationSpeed.y;
+
+                // 一定確率で弾を発射 (約1%の確率で毎フレーム判定)
+                if (Math.random() < 0.01) {
+                    enemyShoot(e);
+                }
+
+                // プレイヤーとの衝突判定（簡易的な距離判定）
+                const dist = player.position.distanceTo(e.position);
+                if (dist < 2.5) {
+                    createExplosion(player.position);
+                    gameOver();
+                }
+
+                // 画面手前に来たらゲームオーバー（防衛失敗）
+                if (e.position.z > 30) {
+                    gameOver();
+                }
+
+                // 弾との当たり判定
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const b = bullets[j];
+                    const distBullet = b.position.distanceTo(e.position);
+
+                    if (distBullet < 2) {
+                        // 命中！
+                        createExplosion(e.position);
+
+                        scene.remove(e);
+                        enemies.splice(i, 1);
+
+                        scene.remove(b);
+                        bullets.splice(j, 1);
+
+                        score += 100;
+                        document.getElementById('score').innerText = 'SCORE: ' + score;
+                        break; // この敵はもう消えたのでループを抜ける
+                    }
+                }
+            }
+
+            // パーティクルの更新
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                const positions = p.geometry.attributes.position.array;
+                const velocities = p.userData.velocities;
+
+                for (let j = 0; j < positions.length; j += 3) {
+                    positions[j] += velocities[j];
+                    positions[j + 1] += velocities[j + 1];
+                    positions[j + 2] += velocities[j + 2];
+                }
+                p.geometry.attributes.position.needsUpdate = true;
+
+                p.userData.life -= 0.02;
+                p.material.opacity = p.userData.life;
+
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ゲーム開始
+        init();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スペースジャンパー</title>
+    <style>
+        /* ゲーム全体のスタイル */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden;
+            /* スクロールバーが出ないようにする */
+        }
+
+        /* ゲーム画面（キャンバス）のスタイル */
+        canvas {
+            background-color: #000;
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        /* ゲームオーバーなどのメッセージ表示用 */
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            /* 最初は非表示 */
+        }
+
+        #message h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ff4444;
+        }
+
+        #message p {
+            font-size: 1.5rem;
+        }
+
+        /* ボタンのスタイル */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            border: none;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        /* 戻るボタン */
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-link">← ポートフォリオに戻る</a>
+
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <div id="message">
+        <h1>GAME OVER</h1>
+        <p>スコア: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="resetGame()">もう一度遊ぶ</button>
+    </div>
+
+    <script>
+        // キャンバスと描画コンテキストの取得
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ゲームの状態管理
+        let isGameOver = false;
+        let score = 0;
+        let animationId;
+
+        // プレイヤーの設定
+        const player = {
+            x: 50,
+            y: 300,
+            width: 30,
+            height: 30,
+            color: '#00ccff',
+            dy: 0, // 縦方向の速度
+            jumpPower: -12, // ジャンプ力
+            gravity: 0.6, // 重力
+            grounded: false // 地面にいるかどうか
+        };
+
+        // 障害物の設定
+        const obstacles = [];
+        let obstacleSpeed = 5; // スピードが変わるように変数に変更
+        let frameCount = 0;
+
+        // キー入力の管理
+        let keys = {};
+
+        // キーが押されたときの処理
+        document.addEventListener('keydown', function (e) {
+            keys[e.code] = true;
+        });
+
+        // キーが離されたときの処理
+        document.addEventListener('keyup', function (e) {
+            keys[e.code] = false;
+        });
+
+        // マウスやタッチでのジャンプ操作
+        document.addEventListener('mousedown', jump);
+        document.addEventListener('touchstart', jump);
+
+        // ジャンプ処理
+        function jump() {
+            if (player.grounded && !isGameOver) {
+                player.dy = player.jumpPower;
+                player.grounded = false;
+            }
+        }
+
+        // ゲームの更新処理（キャラクターの移動や判定など）
+        function update() {
+            if (isGameOver) return;
+
+            // スペースキーでジャンプ
+            if (keys['Space']) {
+                jump();
+            }
+
+            // プレイヤーの物理演算
+            player.dy += player.gravity; // 重力を加える
+            player.y += player.dy; // 位置を更新
+
+            // 地面との当たり判定
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // 障害物の生成（約2秒ごとに生成）
+            // スピードが上がると生成間隔も少し短くする
+            frameCount++;
+            let spawnInterval = 120;
+            if (obstacleSpeed > 6) spawnInterval = 100;
+            if (obstacleSpeed > 8) spawnInterval = 80;
+
+            if (frameCount % spawnInterval === 0) {
+                // 障害物の高さをランダムにする
+                const height = Math.floor(Math.random() * 50) + 30;
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - height,
+                    width: 30,
+                    height: height,
+                    color: '#ff4444'
+                });
+            }
+
+            // 障害物の移動と削除
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= obstacleSpeed;
+
+                // 画面外に出たら削除してスコア加算
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score++;
+
+                    // スコアに応じてスピードアップ
+                    // 5点ごとにスピードを0.5ずつ上げる（最大15まで）
+                    if (score % 5 === 0 && obstacleSpeed < 15) {
+                        obstacleSpeed += 0.5;
+                    }
+
+                    i--;
+                }
+            }
+
+            // 当たり判定
+            for (let i = 0; i < obstacles.length; i++) {
+                const obs = obstacles[i];
+                if (
+                    player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y
+                ) {
+                    gameOver();
+                }
+            }
+        }
+
+        // 描画処理
+        function draw() {
+            // 画面をクリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // プレイヤーの描画
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // 障害物の描画
+            for (let i = 0; i < obstacles.length; i++) {
+                ctx.fillStyle = obstacles[i].color;
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+
+            // スコアの描画
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 30);
+        }
+
+        // ゲームループ
+        function gameLoop() {
+            update();
+            draw();
+            if (!isGameOver) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // ゲームオーバー処理
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('message').style.display = 'block';
+            document.getElementById('finalScore').innerText = score;
+        }
+
+        // ゲームのリセット
+        function resetGame() {
+            isGameOver = false;
+            score = 0;
+            obstacleSpeed = 5; // スピードを初期値に戻す
+            frameCount = 0;
+            obstacles.length = 0; // 配列を空にする
+            player.y = 300;
+            player.dy = 0;
+            document.getElementById('message').style.display = 'none';
+            gameLoop();
+        }
+
+        // ゲーム開始
+        gameLoop();
+
+    </script>
+</body>
+
+</html>
