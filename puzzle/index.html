@@ -1,16 +1,33 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>平面パズルゲーム</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="game-container">
         <h1>パズルゲーム</h1>
-        <div id="board" class="board"></div>
+
+        <div class="split-layout">
+            <div class="left-pane">
+                <div class="info-panel">
+                    <div id="code-display" class="code-display">CODE: -- : -- : -- : -- : -- : -- : --</div>
+                    <div id="timer">120.0</div>
+                    <div id="message"></div>
+                </div>
+                <button id="start-btn">スタート</button>
+            </div>
+
+            <div class="right-pane">
+                <div id="board" class="board"></div>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

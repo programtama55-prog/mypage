@@ -23,10 +23,10 @@ h1 {
 
 .board {
     display: grid;
-    /* 8列 */
-    grid-template-columns: repeat(8, 50px);
-    /* 5行 */
-    grid-template-rows: repeat(5, 50px);
+    /* 7列 */
+    grid-template-columns: repeat(7, 50px);
+    /* 7行 */
+    grid-template-rows: repeat(7, 50px);
     gap: 4px;
     background-color: #ccc;
     padding: 8px;
@@ -37,12 +37,13 @@ h1 {
 .panel {
     width: 50px;
     height: 50px;
-    background-color: white; /* デフォルトは白 */
+    background-color: white;
+    /* デフォルトは白 */
     border: 1px solid #999;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .panel:hover {
@@ -57,4 +58,84 @@ h1 {
 .panel.black {
     background-color: #333;
     border-color: #111;
+}
+
+.info-panel {
+    margin: 0 auto 20px auto;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    max-width: 450px;
+}
+
+.code-display {
+    font-size: 1.5rem;
+    font-family: monospace;
+    letter-spacing: 2px;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+#timer {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #e74c3c;
+    font-family: monospace;
+    margin-bottom: 5px;
+}
+
+#message {
+    font-size: 1.5rem;
+    font-weight: bold;
+    height: 2rem;
+    line-height: 2rem;
+}
+
+#start-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#start-btn:hover {
+    background-color: #2980b9;
+}
+
+#start-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.split-layout {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+.left-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.right-pane {
+    display: flex;
+    justify-content: center;
+}
+
+/* 既存のinfo-panelのマージンをリセットし、縦に整列させる */
+.info-panel {
+    margin: 0 0 20px 0;
 }
