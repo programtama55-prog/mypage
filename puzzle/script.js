@@ -4,16 +4,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const codeDisplay = document.getElementById('code-display');
     const messageElement = document.getElementById('message');
     const startBtn = document.getElementById('start-btn');
+    const checkBtn = document.getElementById('check-btn');
+    const scoreElement = document.getElementById('score-display');
+    const difficultySelect = document.getElementById('difficulty');
 
-    const cols = 7;
-    const rows = 7;
+    let cols = 7;
+    let rows = 7;
 
-    let targetCode = [];
+    let expectedStates = [];
     let panelStates = [];
     let timerId = null;
     let timeLeft = 120.0;
     let isPlaying = false;
     let isDragging = false;
+    let score = 0;
+    let currentLineCount = 0;
 
     // 画面外でマウスを離してもドラッグ状態を解除する
     document.addEventListener('mouseup', () => {
@@ -22,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createBoard() {
         board.innerHTML = '';
+        board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+        board.style.gridTemplateRows = `repeat(${rows}, 50px)`;
         panelStates = Array.from({ length: rows }, () => Array(cols).fill(false));
 
         for (let r = 0; r < rows; r++) {
@@ -41,8 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         panel.classList.remove('black');
                     }
-
-                    checkClear();
                 };
 
                 panel.addEventListener('mousedown', (e) => {
@@ -62,26 +67,158 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function generateCode() {
-        targetCode = [];
-        let displayStr = '';
-        for (let r = 0; r < rows; r++) {
-            const val = Math.floor(Math.random() * 128);
-            targetCode.push(val);
-            const hex = val.toString(16).toUpperCase().padStart(2, '0');
-            displayStr += (r > 0 ? ' : ' : '') + hex;
+    function compressBoard(state) {
+        let covered = Array.from({ length: rows }, () => Array(cols).fill(false));
+        let cmds = [];
+
+        function canCover(r1, r2, c1, c2) {
+            let hasNew = false;
+            for (let r = r1; r <= r2; r++) {
+                for (let c = c1; c <= c2; c++) {
+                    if (!state[r][c]) return false;
+                    if (!covered[r][c]) hasNew = true;
+                }
+            }
+            return hasNew;
         }
-        codeDisplay.textContent = `CODE: ${displayStr}`;
+
+        while (true) {
+            let bestRect = null;
+            let bestScore = 0;
+
+            for (let r1 = 0; r1 < rows; r1++) {
+                for (let r2 = r1; r2 < rows; r2++) {
+                    for (let c1 = 0; c1 < cols; c1++) {
+                        for (let c2 = c1; c2 < cols; c2++) {
+                            if (canCover(r1, r2, c1, c2)) {
+                                let score = 0;
+                                let area = 0;
+                                for (let r = r1; r <= r2; r++) {
+                                    for (let c = c1; c <= c2; c++) {
+                                        if (!covered[r][c]) score++;
+                                        area++;
+                                    }
+                                }
+                                if (score > bestScore) {
+                                    bestScore = score;
+                                    bestRect = { r1, r2, c1, c2, area };
+                                } else if (score === bestScore && score > 0) {
+                                    if (area > bestRect.area) {
+                                        bestRect = { r1, r2, c1, c2, area };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!bestRect) break;
+
+            for (let r = bestRect.r1; r <= bestRect.r2; r++) {
+                for (let c = bestRect.c1; c <= bestRect.c2; c++) {
+                    covered[r][c] = true;
+                }
+            }
+
+            let cx = Math.floor(cols / 2);
+            let cy = Math.floor(rows / 2);
+
+            let x1 = bestRect.c1 - cx;
+            let x2 = bestRect.c2 - cx;
+            let y1 = cy - bestRect.r2;
+            let y2 = cy - bestRect.r1;
+
+            let xStr = x1 === x2 ? `[${x1}]` : `[${x1},${x2}]`;
+            let yStr = y1 === y2 ? `[${y1}]` : `[${y1},${y2}]`;
+            cmds.push(`{black:${xStr},${yStr}}`);
+        }
+        return cmds;
+    }
+
+    function generateCode() {
+        let valid = false;
+        let bestCmds = [];
+        let bestState = null;
+
+        while (!valid) {
+            let state = Array.from({ length: rows }, () => Array(cols).fill(false));
+            let numCommands = Math.floor(Math.random() * 2) + 2;
+            let cmds = [];
+
+            for (let i = 0; i < numCommands; i++) {
+                let types = ['black', 'white', 'invert'];
+                let type = i === 0 ? 'black' : types[Math.floor(Math.random() * types.length)];
+
+                let cx = Math.floor(cols / 2);
+                let cy = Math.floor(rows / 2);
+
+                let x1 = Math.floor(Math.random() * cols) - cx;
+                let x2 = Math.floor(Math.random() * cols) - cx;
+                if (x1 > x2) [x1, x2] = [x2, x1];
+
+                let y1 = Math.floor(Math.random() * rows) - cy;
+                let y2 = Math.floor(Math.random() * rows) - cy;
+                if (y1 > y2) [y1, y2] = [y2, y1];
+
+                let xStr = x1 === x2 ? `[${x1}]` : `[${x1},${x2}]`;
+                let yStr = y1 === y2 ? `[${y1}]` : `[${y1},${y2}]`;
+
+                cmds.push(`{${type}:${xStr},${yStr}}`);
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        let x = c - cx;
+                        let y = cy - r;
+                        if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+                            if (type === 'black') state[r][c] = true;
+                            if (type === 'white') state[r][c] = false;
+                            if (type === 'invert') state[r][c] = !state[r][c];
+                        }
+                    }
+                }
+            }
+
+            let blackCount = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (state[r][c]) blackCount++;
+                }
+            }
+
+            if (blackCount >= 4) {
+                let greedyCmds = compressBoard(state);
+                if (cmds.length <= greedyCmds.length) {
+                    bestCmds = cmds;
+                    bestState = state;
+                    valid = true;
+                } else if (greedyCmds.length < cmds.length) {
+                    bestCmds = greedyCmds;
+                    bestState = state;
+                    valid = true;
+                }
+            }
+        }
+
+        expectedStates = bestState;
+        currentLineCount = bestCmds.length;
+        codeDisplay.innerHTML = bestCmds.join('<br>');
     }
 
     function startGame() {
-        createBoard();
-        generateCode();
-        timeLeft = 120.0;
-        isPlaying = true;
-        messageElement.textContent = '';
-        startBtn.style.display = 'none';
+        let diff = difficultySelect.value;
+        if (diff === 'easy') {
+            cols = 5; rows = 5;
+        } else if (diff === 'hard') {
+            cols = 9; rows = 9;
+        } else {
+            cols = 7; rows = 7;
+        }
 
+        score = 0;
+        updateScore();
+
+        timeLeft = 300.0;
         if (timerId) clearInterval(timerId);
         timerElement.textContent = timeLeft.toFixed(1);
 
@@ -93,6 +230,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             timerElement.textContent = timeLeft.toFixed(1);
         }, 100);
+
+        startRound();
+
+        startBtn.style.display = 'none';
+        difficultySelect.disabled = true;
+        checkBtn.disabled = false;
+    }
+
+    function startRound() {
+        createBoard();
+        generateCode();
+        isPlaying = true;
+        messageElement.textContent = '';
+        messageElement.style.color = '';
+    }
+
+    function updateScore() {
+        scoreElement.textContent = `SCORE: ${score}`;
     }
 
     function gameOver() {
@@ -103,33 +258,61 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.style.color = '#e74c3c';
         startBtn.textContent = 'もう一度プレイ';
         startBtn.style.display = 'inline-block';
+        difficultySelect.disabled = false;
+        checkBtn.disabled = true;
     }
 
     function checkClear() {
+        if (!isPlaying || !expectedStates || expectedStates.length === 0) return;
+
+        let isCorrect = true;
         for (let r = 0; r < rows; r++) {
-            let rowValue = 0;
             for (let c = 0; c < cols; c++) {
-                if (panelStates[r][c]) {
-                    rowValue += (1 << (6 - c));
+                if (panelStates[r][c] !== expectedStates[r][c]) {
+                    isCorrect = false;
+                    break;
                 }
             }
-            if (rowValue !== targetCode[r]) {
-                return;
-            }
+            if (!isCorrect) break;
         }
 
-        gameClear();
+        if (isCorrect) {
+            isPlaying = false;
+            if (timerId) clearInterval(timerId); // タイマーを一時停止
+
+            let addedScore = currentLineCount * 100;
+            score += addedScore;
+            updateScore();
+            messageElement.textContent = '+' + addedScore + '!!';
+            messageElement.style.color = '#2ecc71';
+
+            setTimeout(() => {
+                if (timeLeft > 0) {
+                    startRound();
+
+                    // 次のラウンドでタイマーを再開
+                    timerId = setInterval(() => {
+                        timeLeft -= 0.1;
+                        if (timeLeft <= 0) {
+                            timeLeft = 0;
+                            gameOver();
+                        }
+                        timerElement.textContent = timeLeft.toFixed(1);
+                    }, 100);
+                } else {
+                    gameOver();
+                }
+            }, 1000);
+        } else {
+            messageElement.textContent = 'WRONG!';
+            messageElement.style.color = '#e74c3c';
+            setTimeout(() => {
+                if (isPlaying) messageElement.textContent = '';
+            }, 1000);
+        }
     }
 
-    function gameClear() {
-        isPlaying = false;
-        clearInterval(timerId);
-        messageElement.textContent = 'CLEAR!';
-        messageElement.style.color = '#2ecc71';
-        startBtn.textContent = 'もう一度プレイ';
-        startBtn.style.display = 'inline-block';
-    }
-
+    checkBtn.addEventListener('click', checkClear);
     startBtn.addEventListener('click', startGame);
 
     // 初期状態のボードを表示
