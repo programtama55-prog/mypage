@@ -1,0 +1,60 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f2f5;
+}
+
+.game-container {
+    text-align: center;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.board {
+    display: grid;
+    /* 8列 */
+    grid-template-columns: repeat(8, 50px);
+    /* 5行 */
+    grid-template-rows: repeat(5, 50px);
+    gap: 4px;
+    background-color: #ccc;
+    padding: 8px;
+    border-radius: 8px;
+    margin: 0 auto;
+}
+
+.panel {
+    width: 50px;
+    height: 50px;
+    background-color: white; /* デフォルトは白 */
+    border: 1px solid #999;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.panel:hover {
+    transform: scale(1.05);
+}
+
+.panel:active {
+    transform: scale(0.95);
+}
+
+/* 黒の状態 */
+.panel.black {
+    background-color: #333;
+    border-color: #111;
+}
