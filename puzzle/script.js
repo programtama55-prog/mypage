@@ -21,52 +21,55 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             text: `
                 <p><strong>ようこそ、パズルゲームへ！</strong></p>
-                <p>このゲームは、表示された<b>CODE（命令文）</b>の通りにパネルを黒く塗りつぶすゲームです。</p>
-                <p>制限時間内にできるだけ多くの問題を解きましょう。</p>
-            `
-        },
-        {
-            text: `
-                <p><strong>CODEの読み方</strong></p>
-                <p>CODEは <code>{命令:[X1,Y1],[X2,Y2]}</code> のような形式で表示されます。</p>
-                <ul>
-                    <li><code>black</code>：指定された範囲を黒にする</li>
-                    <li><code>white</code>：指定された範囲を白にする</li>
-                    <li><code>invert</code>：指定された範囲の白黒を反転させる</li>
-                </ul>
-            `
-        },
-        {
-            text: `
-                <p><strong>座標（X,Y）について</strong></p>
-                <p>画面の左と上に数字が書いてあります。</p>
-                <ul>
-                    <li>横方向（列）が <b>X座標</b></li>
-                    <li>縦方向（行）が <b>Y座標</b></li>
-                </ul>
-                <p>例：<code>[2,3]</code> は、左から2番目、上から3番目を指します。</p>
-            `
-        },
-        {
-            text: `
-                <p><strong>コマンドの実行例</strong></p>
-                <p>以下の3つのコマンドが実行された例を見てみましょう！</p>
-                <div class="demo-code">
-                    1. <code>{black:[2,2],[4,4]}</code> (全体を黒く塗る)<br>
-                    2. <code>{white:[3,3],[3,3]}</code> (真ん中を白に戻す)<br>
-                    3. <code>{invert:[4,2],[4,4]}</code> (右端の1列を反転する)
-                </div>
-                <!-- デモ用ボードのコンテナ -->
-                <div id="tutorial-demo-board-container" class="demo-board-container"></div>
+                <p>このゲームは、表示された<b>CODE（命令文）</b>の通りにパネルの色を変えるゲームです。</p>
+                <p>CODEは <code>{命令:[X1,Y1],[X2,Y2]}</code> の形式で表示されます。<br>
+                左と上の数字がそれぞれ <b>X座標(列)</b> と <b>Y座標(行)</b> です。</p>
             `,
-            onShow: renderDemoBoard
+            miniBoard: null
+        },
+        {
+            text: `
+                <p><strong>コマンド1：black</strong></p>
+                <p>指定された範囲のパネルを<b>黒</b>く塗りつぶします。</p>
+                <p>例： <code>{black:[2,2],[4,3]}</code></p>
+            `,
+            miniBoard: {
+                type: 'black',
+                x1: 2, y1: 2, x2: 4, y2: 3,
+                baseState: false // 全て白からスタート
+            }
+        },
+        {
+            text: `
+                <p><strong>コマンド2：white</strong></p>
+                <p>指定された範囲のパネルを<b>白</b>く（元の色に）戻します。</p>
+                <p>例： 全体が黒い状態から <code>{white:[2,2],[4,3]}</code> を実行</p>
+            `,
+            miniBoard: {
+                type: 'white',
+                x1: 2, y1: 2, x2: 4, y2: 3,
+                baseState: true // 全て黒からスタート
+            }
+        },
+        {
+            text: `
+                <p><strong>コマンド3：invert</strong></p>
+                <p>指定された範囲のパネルの白と黒を<b>反転</b>させます。</p>
+                <p>例： 市松模様の状態から <code>{invert:[2,2],[4,3]}</code> を実行</p>
+            `,
+            miniBoard: {
+                type: 'invert',
+                x1: 2, y1: 2, x2: 4, y2: 3,
+                baseState: 'checker' // 市松模様からスタート
+            }
         },
         {
             text: `
                 <p><strong>操作方法</strong></p>
                 <p>パネルはクリックするか、<b>マウスでドラッグ</b>するとなぞった場所の色を連続して変えることができます。</p>
                 <p>入力が終わったら「判定」ボタンを押してください。<br>正解するとスコアが加算され、制限時間が少し回復します！</p>
-            `
+            `,
+            miniBoard: null
         }
     ];
 
@@ -395,73 +398,92 @@ document.addEventListener('DOMContentLoaded', () => {
     startBtn.addEventListener('click', startGame);
 
     // --- チュートリアル制御 ---
-    function renderDemoBoard() {
-        // コンテナの取得（HTMLに含まれてから実行される）
-        const container = document.getElementById('tutorial-demo-board-container');
-        if (!container) return;
+    function createMiniBoard(config) {
+        const boardWrapper = document.createElement('div');
+        boardWrapper.classList.add('mini-board-wrapper');
 
-        container.innerHTML = '';
+        const mCols = 5;
+        const mRows = 5;
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gap = '2px';
+        grid.style.backgroundColor = '#ccc';
+        grid.style.padding = '4px';
+        grid.style.borderRadius = '6px';
+        grid.style.margin = '10px auto';
+        grid.style.width = 'fit-content';
 
-        // デモ用の小さなボード（5x5）を作成
-        const d_cols = 5;
-        const d_rows = 5;
-        container.style.display = 'grid';
-        container.style.gap = '4px';
-        container.style.gridTemplateColumns = `30px repeat(${d_cols}, 30px)`;
-        container.style.gridTemplateRows = `30px repeat(${d_rows}, 30px)`;
-        container.style.justifyContent = 'center';
-        container.style.margin = '10px 0';
+        // ヘッダー行＋データ行
+        grid.style.gridTemplateColumns = `30px repeat(${mCols}, 35px)`;
+        grid.style.gridTemplateRows = `30px repeat(${mRows}, 35px)`;
 
-        // 状態の計算 (1.black, 2.white, 3.invert)
-        let d_state = Array.from({ length: d_rows }, () => Array(d_cols).fill(false));
-        // 1. {black:[2,2],[4,4]}
-        for (let r = 1; r <= 3; r++) for (let c = 1; c <= 3; c++) d_state[r][c] = true;
-        // 2. {white:[3,3],[3,3]}
-        d_state[2][2] = false;
-        // 3. {invert:[4,2],[4,4]}
-        for (let r = 1; r <= 3; r++) d_state[r][3] = !d_state[r][3];
+        // (0,0)空白
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('axis-label');
+        emptyCell.style.fontSize = '12px';
+        grid.appendChild(emptyCell);
 
-        // 枠とパネルの描画
-        const empty = document.createElement('div');
-        empty.classList.add('axis-label');
-        empty.style.fontSize = '12px';
-        container.appendChild(empty);
-
-        for (let c = 0; c < d_cols; c++) {
+        for (let c = 0; c < mCols; c++) {
             const label = document.createElement('div');
             label.classList.add('axis-label');
-            label.textContent = c + 1;
             label.style.fontSize = '12px';
-            container.appendChild(label);
+            label.textContent = c + 1;
+            grid.appendChild(label);
         }
 
-        for (let r = 0; r < d_rows; r++) {
+        for (let r = 0; r < mRows; r++) {
             const rowLabel = document.createElement('div');
             rowLabel.classList.add('axis-label');
-            rowLabel.textContent = r + 1;
             rowLabel.style.fontSize = '12px';
-            container.appendChild(rowLabel);
+            rowLabel.textContent = r + 1;
+            grid.appendChild(rowLabel);
 
-            for (let c = 0; c < d_cols; c++) {
+            for (let c = 0; c < mCols; c++) {
                 const panel = document.createElement('div');
                 panel.classList.add('panel');
-                panel.style.width = '30px';
-                panel.style.height = '30px';
-                // デモ用なのでクリックイベントは無し
-                if (d_state[r][c]) {
-                    panel.classList.add('black');
+                panel.style.width = '35px';
+                panel.style.height = '35px';
+                panel.style.cursor = 'default';
+                panel.style.pointerEvents = 'none'; // クリック不可
+
+                let isBlack = false;
+                if (config.baseState === 'checker') {
+                    isBlack = (r + c) % 2 === 0;
+                } else {
+                    isBlack = config.baseState;
                 }
-                container.appendChild(panel);
+
+                const cx = c + 1;
+                const cy = r + 1;
+                const inRange = (cx >= config.x1 && cx <= config.x2 && cy >= config.y1 && cy <= config.y2);
+
+                if (inRange) {
+                    if (config.type === 'black') isBlack = true;
+                    else if (config.type === 'white') isBlack = false;
+                    else if (config.type === 'invert') isBlack = !isBlack;
+                }
+
+                if (isBlack) panel.classList.add('black');
+
+                // コマンドの対象範囲をハイライト
+                if (inRange) {
+                    panel.style.border = '2px solid #e74c3c';
+                }
+
+                grid.appendChild(panel);
             }
         }
+        boardWrapper.appendChild(grid);
+        return boardWrapper;
     }
 
     function updateTutorial() {
-        tutorialContent.innerHTML = tutorialSteps[currentTutorialStep].text;
+        const step = tutorialSteps[currentTutorialStep];
+        tutorialContent.innerHTML = step.text;
 
-        // 特定のステップで関数を呼び出す
-        if (typeof tutorialSteps[currentTutorialStep].onShow === 'function') {
-            tutorialSteps[currentTutorialStep].onShow();
+        if (step.miniBoard) {
+            const miniBoardElement = createMiniBoard(step.miniBoard);
+            tutorialContent.appendChild(miniBoardElement);
         }
 
         // ボタン状態
