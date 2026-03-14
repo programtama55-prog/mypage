@@ -27,28 +27,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createBoard() {
         board.innerHTML = '';
-        board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
-        board.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+        // 座標表示用に1行・1列追加
+        board.style.gridTemplateColumns = `40px repeat(${cols}, 50px)`;
+        board.style.gridTemplateRows = `40px repeat(${rows}, 50px)`;
         panelStates = Array.from({ length: rows }, () => Array(cols).fill(false));
 
+        // (0,0) の空白セル
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('axis-label');
+        board.appendChild(emptyCell);
+
+        // X軸（列）のラベル
+        for (let c = 0; c < cols; c++) {
+            const label = document.createElement('div');
+            label.classList.add('axis-label');
+            label.textContent = c + 1;
+            board.appendChild(label);
+        }
+
         for (let r = 0; r < rows; r++) {
+            // Y軸（行）のラベル
+            const rowLabel = document.createElement('div');
+            rowLabel.classList.add('axis-label');
+            rowLabel.textContent = r + 1;
+            board.appendChild(rowLabel);
+
             for (let c = 0; c < cols; c++) {
                 const panel = document.createElement('div');
                 panel.classList.add('panel');
 
                 panel.dataset.row = r;
                 panel.dataset.col = c;
-
-                // 一番上の行にX座標（列番号）、一番左の列にY座標（行番号）を表示
-                if (r === 0 && c === 0) {
-                    panel.textContent = '1,1'; // 左上は両方表示（またはお好みですが一旦1,1に）
-                } else if (r === 0) {
-                    panel.textContent = `${c + 1}`; // 上端
-                } else if (c === 0) {
-                    panel.textContent = `${r + 1}`; // 左端
-                } else {
-                    panel.textContent = '';
-                }
+                // panel.textContent = `${c + 1},${r + 1}`; // パネル自体の表示は削除
 
                 const togglePanel = () => {
                     if (!isPlaying) return;
