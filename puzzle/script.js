@@ -27,43 +27,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createBoard() {
         board.innerHTML = '';
-        board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
-        board.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+        // 座標軸(X軸)の分1行足し、(Y軸)の分1列足す
+        board.style.gridTemplateColumns = `repeat(${cols + 1}, 50px)`;
+        board.style.gridTemplateRows = `repeat(${rows + 1}, 50px)`;
         panelStates = Array.from({ length: rows }, () => Array(cols).fill(false));
 
+        // 1行目: X座標軸のヘッダーを作成
+        for (let c = 0; c <= cols; c++) {
+            const axisCell = document.createElement('div');
+            axisCell.classList.add('axis-label');
+            if (c < cols) {
+                // パネルの列の真上 (x方向)
+                axisCell.textContent = c + 1;
+            } else {
+                // 最後の列 (右上の空白)
+                axisCell.textContent = "";
+            }
+            board.appendChild(axisCell);
+        }
+
+        // 以降の行: パネル + Y座標軸のラベルを作成
         for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const panel = document.createElement('div');
-                panel.classList.add('panel');
+            for (let c = 0; c <= cols; c++) {
+                if (c < cols) {
+                    // パネル部分
+                    const panel = document.createElement('div');
+                    panel.classList.add('panel');
 
-                panel.dataset.row = r;
-                panel.dataset.col = c;
-                panel.textContent = `${c + 1},${r + 1}`;
+                    panel.dataset.row = r;
+                    panel.dataset.col = c;
 
-                const togglePanel = () => {
-                    if (!isPlaying) return;
+                    // クリックなどのイベントハンドラ
+                    const togglePanel = () => {
+                        if (!isPlaying) return;
 
-                    panelStates[r][c] = !panelStates[r][c];
-                    if (panelStates[r][c]) {
-                        panel.classList.add('black');
-                    } else {
-                        panel.classList.remove('black');
-                    }
-                };
+                        panelStates[r][c] = !panelStates[r][c];
+                        if (panelStates[r][c]) {
+                            panel.classList.add('black');
+                        } else {
+                            panel.classList.remove('black');
+                        }
+                    };
 
-                panel.addEventListener('mousedown', (e) => {
-                    e.preventDefault(); // デフォルトのドラッグ動作を防ぐ
-                    isDragging = true;
-                    togglePanel();
-                });
-
-                panel.addEventListener('mouseenter', () => {
-                    if (isDragging) {
+                    panel.addEventListener('mousedown', (e) => {
+                        e.preventDefault(); // デフォルトのドラッグ動作を防ぐ
+                        isDragging = true;
                         togglePanel();
-                    }
-                });
+                    });
 
-                board.appendChild(panel);
+                    panel.addEventListener('mouseenter', () => {
+                        if (isDragging) {
+                            togglePanel();
+                        }
+                    });
+
+                    board.appendChild(panel);
+                } else {
+                    // 右側のY座標軸ヘッダーを作成 (y方向)
+                    const axisCell = document.createElement('div');
+                    axisCell.classList.add('axis-label');
+                    axisCell.textContent = r + 1;
+                    board.appendChild(axisCell);
+                }
             }
         }
     }
