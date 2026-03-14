@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 panel.dataset.row = r;
                 panel.dataset.col = c;
+                panel.textContent = `${c + 1},${r + 1}`;
 
                 const togglePanel = () => {
                     if (!isPlaying) return;
@@ -123,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let x1 = bestRect.c1 + 1;
             let x2 = bestRect.c2 + 1;
-            let y1 = 1 - bestRect.r2;
-            let y2 = 1 - bestRect.r1;
+            let y1 = bestRect.r1 + 1;
+            let y2 = bestRect.r2 + 1;
 
             cmds.push(`{black:[${x1},${y1}],[${x2},${y2}]}`);
         }
@@ -155,15 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let x1 = c1 + 1;
                 let x2 = c2 + 1;
-                let y1 = 1 - r2;
-                let y2 = 1 - r1;
+                let y1 = r1 + 1;
+                let y2 = r2 + 1;
 
                 cmds.push(`{${type}:[${x1},${y1}],[${x2},${y2}]}`);
 
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         let x = c + 1;
-                        let y = 1 - r;
+                        let y = r + 1;
                         if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
                             if (type === 'black') state[r][c] = true;
                             if (type === 'white') state[r][c] = false;
