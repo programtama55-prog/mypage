@@ -121,17 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            let cx = Math.floor(cols / 2);
-            let cy = Math.floor(rows / 2);
+            let x1 = bestRect.c1 + 1;
+            let x2 = bestRect.c2 + 1;
+            let y1 = 1 - bestRect.r2;
+            let y2 = 1 - bestRect.r1;
 
-            let x1 = bestRect.c1 - cx;
-            let x2 = bestRect.c2 - cx;
-            let y1 = cy - bestRect.r2;
-            let y2 = cy - bestRect.r1;
-
-            let xStr = x1 === x2 ? `[${x1}]` : `[${x1},${x2}]`;
-            let yStr = y1 === y2 ? `[${y1}]` : `[${y1},${y2}]`;
-            cmds.push(`{black:${xStr},${yStr}}`);
+            cmds.push(`{black:[${x1},${y1}],[${x2},${y2}]}`);
         }
         return cmds;
     }
@@ -150,26 +145,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 let types = ['black', 'white', 'invert'];
                 let type = i === 0 ? 'black' : types[Math.floor(Math.random() * types.length)];
 
-                let cx = Math.floor(cols / 2);
-                let cy = Math.floor(rows / 2);
+                let c1 = Math.floor(Math.random() * cols);
+                let c2 = Math.floor(Math.random() * cols);
+                if (c1 > c2) [c1, c2] = [c2, c1];
 
-                let x1 = Math.floor(Math.random() * cols) - cx;
-                let x2 = Math.floor(Math.random() * cols) - cx;
-                if (x1 > x2) [x1, x2] = [x2, x1];
+                let r1 = Math.floor(Math.random() * rows);
+                let r2 = Math.floor(Math.random() * rows);
+                if (r1 > r2) [r1, r2] = [r2, r1];
 
-                let y1 = Math.floor(Math.random() * rows) - cy;
-                let y2 = Math.floor(Math.random() * rows) - cy;
-                if (y1 > y2) [y1, y2] = [y2, y1];
+                let x1 = c1 + 1;
+                let x2 = c2 + 1;
+                let y1 = 1 - r2;
+                let y2 = 1 - r1;
 
-                let xStr = x1 === x2 ? `[${x1}]` : `[${x1},${x2}]`;
-                let yStr = y1 === y2 ? `[${y1}]` : `[${y1},${y2}]`;
-
-                cmds.push(`{${type}:${xStr},${yStr}}`);
+                cmds.push(`{${type}:[${x1},${y1}],[${x2},${y2}]}`);
 
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
-                        let x = c - cx;
-                        let y = cy - r;
+                        let x = c + 1;
+                        let y = 1 - r;
                         if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
                             if (type === 'black') state[r][c] = true;
                             if (type === 'white') state[r][c] = false;
