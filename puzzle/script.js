@@ -49,6 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
             text: `
+                <p><strong>コマンドの実行例</strong></p>
+                <p>以下の3つのコマンドが実行された例を見てみましょう！</p>
+                <div class="demo-code">
+                    1. <code>{black:[2,2],[4,4]}</code> (全体を黒く塗る)<br>
+                    2. <code>{white:[3,3],[3,3]}</code> (真ん中を白に戻す)<br>
+                    3. <code>{invert:[4,2],[4,4]}</code> (右端の1列を反転する)
+                </div>
+                <!-- デモ用ボードのコンテナ -->
+                <div id="tutorial-demo-board-container" class="demo-board-container"></div>
+            `,
+            onShow: renderDemoBoard
+        },
+        {
+            text: `
                 <p><strong>操作方法</strong></p>
                 <p>パネルはクリックするか、<b>マウスでドラッグ</b>するとなぞった場所の色を連続して変えることができます。</p>
                 <p>入力が終わったら「判定」ボタンを押してください。<br>正解するとスコアが加算され、制限時間が少し回復します！</p>
@@ -381,8 +395,74 @@ document.addEventListener('DOMContentLoaded', () => {
     startBtn.addEventListener('click', startGame);
 
     // --- チュートリアル制御 ---
+    function renderDemoBoard() {
+        // コンテナの取得（HTMLに含まれてから実行される）
+        const container = document.getElementById('tutorial-demo-board-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // デモ用の小さなボード（5x5）を作成
+        const d_cols = 5;
+        const d_rows = 5;
+        container.style.display = 'grid';
+        container.style.gap = '4px';
+        container.style.gridTemplateColumns = `30px repeat(${d_cols}, 30px)`;
+        container.style.gridTemplateRows = `30px repeat(${d_rows}, 30px)`;
+        container.style.justifyContent = 'center';
+        container.style.margin = '10px 0';
+
+        // 状態の計算 (1.black, 2.white, 3.invert)
+        let d_state = Array.from({ length: d_rows }, () => Array(d_cols).fill(false));
+        // 1. {black:[2,2],[4,4]}
+        for (let r = 1; r <= 3; r++) for (let c = 1; c <= 3; c++) d_state[r][c] = true;
+        // 2. {white:[3,3],[3,3]}
+        d_state[2][2] = false;
+        // 3. {invert:[4,2],[4,4]}
+        for (let r = 1; r <= 3; r++) d_state[r][3] = !d_state[r][3];
+
+        // 枠とパネルの描画
+        const empty = document.createElement('div');
+        empty.classList.add('axis-label');
+        empty.style.fontSize = '12px';
+        container.appendChild(empty);
+
+        for (let c = 0; c < d_cols; c++) {
+            const label = document.createElement('div');
+            label.classList.add('axis-label');
+            label.textContent = c + 1;
+            label.style.fontSize = '12px';
+            container.appendChild(label);
+        }
+
+        for (let r = 0; r < d_rows; r++) {
+            const rowLabel = document.createElement('div');
+            rowLabel.classList.add('axis-label');
+            rowLabel.textContent = r + 1;
+            rowLabel.style.fontSize = '12px';
+            container.appendChild(rowLabel);
+
+            for (let c = 0; c < d_cols; c++) {
+                const panel = document.createElement('div');
+                panel.classList.add('panel');
+                panel.style.width = '30px';
+                panel.style.height = '30px';
+                // デモ用なのでクリックイベントは無し
+                if (d_state[r][c]) {
+                    panel.classList.add('black');
+                }
+                container.appendChild(panel);
+            }
+        }
+    }
+
     function updateTutorial() {
         tutorialContent.innerHTML = tutorialSteps[currentTutorialStep].text;
+
+        // 特定のステップで関数を呼び出す
+        if (typeof tutorialSteps[currentTutorialStep].onShow === 'function') {
+            tutorialSteps[currentTutorialStep].onShow();
+        }
 
         // ボタン状態
         tutorialPrev.disabled = currentTutorialStep === 0;

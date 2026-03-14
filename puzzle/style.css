@@ -271,6 +271,22 @@ h1 {
     color: #e74c3c;
 }
 
+.demo-code {
+    background: #fdfdfd;
+    border-left: 4px solid #3498db;
+    padding: 10px 15px;
+    margin: 10px 0;
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+.demo-board-container {
+    background: #f0f2f5;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
 .tutorial-controls {
     display: flex;
     justify-content: space-between;
