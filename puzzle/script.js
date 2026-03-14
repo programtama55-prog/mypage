@@ -75,8 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTutorialStep = 0;
 
-    let cols = 7;
-    let rows = 7;
+    // デフォルト（画面初期表示時）のサイズ
+    let cols = 5;
+    let rows = 5;
+    let maxCommands = 3;
 
     let expectedStates = [];
     let panelStates = [];
@@ -226,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         while (!valid) {
             let state = Array.from({ length: rows }, () => Array(cols).fill(false));
-            let numCommands = Math.floor(Math.random() * 2) + 2;
+            // コマンド数を 2 〜 maxCommands のランダムで決定
+            let numCommands = Math.floor(Math.random() * (maxCommands - 1)) + 2;
             let cmds = [];
 
             for (let i = 0; i < numCommands; i++) {
@@ -290,11 +293,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function startGame() {
         let diff = difficultySelect.value;
         if (diff === 'easy') {
-            cols = 5; rows = 5;
+            cols = 4; rows = 4;
+            maxCommands = 2;
         } else if (diff === 'hard') {
-            cols = 9; rows = 9;
-        } else {
+            cols = 6; rows = 6;
+            maxCommands = 4;
+        } else if (diff === 'expert') {
             cols = 7; rows = 7;
+            maxCommands = 5;
+        } else {
+            // normal
+            cols = 5; rows = 5;
+            maxCommands = 3;
         }
 
         score = 0;
