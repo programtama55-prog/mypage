@@ -8,6 +8,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreElement = document.getElementById('score-display');
     const difficultySelect = document.getElementById('difficulty');
 
+    // チュートリアル関連の要素
+    const tutorialBtn = document.getElementById('tutorial-btn');
+    const tutorialModal = document.getElementById('tutorial-modal');
+    const tutorialContent = document.getElementById('tutorial-content');
+    const tutorialPrev = document.getElementById('tutorial-prev');
+    const tutorialNext = document.getElementById('tutorial-next');
+    const tutorialClose = document.getElementById('tutorial-close');
+    const tutorialDots = document.getElementById('tutorial-dots');
+
+    const tutorialSteps = [
+        {
+            text: `
+                <p><strong>ようこそ、パズルゲームへ！</strong></p>
+                <p>このゲームは、表示された<b>CODE（命令文）</b>の通りにパネルを黒く塗りつぶすゲームです。</p>
+                <p>制限時間内にできるだけ多くの問題を解きましょう。</p>
+            `
+        },
+        {
+            text: `
+                <p><strong>CODEの読み方</strong></p>
+                <p>CODEは <code>{命令:[X1,Y1],[X2,Y2]}</code> のような形式で表示されます。</p>
+                <ul>
+                    <li><code>black</code>：指定された範囲を黒にする</li>
+                    <li><code>white</code>：指定された範囲を白にする</li>
+                    <li><code>invert</code>：指定された範囲の白黒を反転させる</li>
+                </ul>
+            `
+        },
+        {
+            text: `
+                <p><strong>座標（X,Y）について</strong></p>
+                <p>画面の左と上に数字が書いてあります。</p>
+                <ul>
+                    <li>横方向（列）が <b>X座標</b></li>
+                    <li>縦方向（行）が <b>Y座標</b></li>
+                </ul>
+                <p>例：<code>[2,3]</code> は、左から2番目、上から3番目を指します。</p>
+            `
+        },
+        {
+            text: `
+                <p><strong>操作方法</strong></p>
+                <p>パネルはクリックするか、<b>マウスでドラッグ</b>するとなぞった場所の色を連続して変えることができます。</p>
+                <p>入力が終わったら「判定」ボタンを押してください。<br>正解するとスコアが加算され、制限時間が少し回復します！</p>
+            `
+        }
+    ];
+
+    let currentTutorialStep = 0;
+
     let cols = 7;
     let rows = 7;
 
@@ -330,6 +380,64 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBtn.addEventListener('click', checkClear);
     startBtn.addEventListener('click', startGame);
 
+    // --- チュートリアル制御 ---
+    function updateTutorial() {
+        tutorialContent.innerHTML = tutorialSteps[currentTutorialStep].text;
+
+        // ボタン状態
+        tutorialPrev.disabled = currentTutorialStep === 0;
+
+        if (currentTutorialStep === tutorialSteps.length - 1) {
+            tutorialNext.textContent = '閉じる';
+        } else {
+            tutorialNext.textContent = '次へ';
+        }
+
+        // ドットの更新
+        tutorialDots.innerHTML = '';
+        for (let i = 0; i < tutorialSteps.length; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            if (i === currentTutorialStep) dot.classList.add('active');
+            tutorialDots.appendChild(dot);
+        }
+    }
+
+    function openTutorial() {
+        currentTutorialStep = 0;
+        updateTutorial();
+        tutorialModal.classList.remove('hidden');
+    }
+
+    function closeTutorial() {
+        tutorialModal.classList.add('hidden');
+    }
+
+    tutorialBtn.addEventListener('click', openTutorial);
+    tutorialClose.addEventListener('click', closeTutorial);
+
+    tutorialNext.addEventListener('click', () => {
+        if (currentTutorialStep < tutorialSteps.length - 1) {
+            currentTutorialStep++;
+            updateTutorial();
+        } else {
+            closeTutorial();
+        }
+    });
+
+    tutorialPrev.addEventListener('click', () => {
+        if (currentTutorialStep > 0) {
+            currentTutorialStep--;
+            updateTutorial();
+        }
+    });
+
     // 初期状態のボードを表示
     createBoard();
+
+    // 初回訪問時のみチュートリアル自動表示
+    if (!localStorage.getItem('puzzleTutorialSeen')) {
+        openTutorial();
+        localStorage.setItem('puzzleTutorialSeen', 'true');
+    }
 });

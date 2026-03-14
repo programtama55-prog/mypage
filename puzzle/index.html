@@ -10,7 +10,10 @@
 
 <body>
     <div class="game-container">
-        <h1>パズルゲーム</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>パズルゲーム</h1>
+            <button id="tutorial-btn" class="secondary-btn">遊び方（チュートリアル）</button>
+        </div>
 
         <div class="split-layout">
             <div class="left-pane">
@@ -39,6 +42,23 @@
             </div>
         </div>
     </div>
+
+    <!-- チュートリアルモーダル -->
+    <div id="tutorial-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>遊び方</h2>
+            <div id="tutorial-content" class="tutorial-text">
+                <!-- Javascriptで内容を切り替える -->
+            </div>
+            <div class="tutorial-controls">
+                <button id="tutorial-prev" class="secondary-btn" disabled>前へ</button>
+                <div id="tutorial-dots" class="dots-indicator"></div>
+                <button id="tutorial-next" class="primary-btn">次へ</button>
+            </div>
+            <button id="tutorial-close" class="close-btn">&times;</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 
