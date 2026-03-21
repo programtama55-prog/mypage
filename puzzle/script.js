@@ -310,7 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         updateScore();
 
-        timeLeft = 120.0;
+        if (diff === 'hard' || diff === 'expert') {
+            timeLeft = 300.0;
+        } else {
+            timeLeft = 120.0;
+        }
         if (timerId) clearInterval(timerId);
         timerElement.textContent = timeLeft.toFixed(1);
 
